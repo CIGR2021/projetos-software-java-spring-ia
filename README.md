@@ -38,3 +38,63 @@ spring.servlet.multipart.max-request-size=50MB
 
 # API Key Gemini
 gemini.api.key=SUA_CHAVE_AQUI
+```
+### 2. Executar a Aplicação
+No terminal do Manjaro, dentro da pasta do projeto:
+```
+Bash
+mvn clean install
+mvn spring-boot:run
+```
+📂 Estrutura de Tratamento de Erros
+A aplicação inclui um CustomExceptionHandler para gerir ficheiros acima do limite permitido. A classe deve estar localizada em:
+src/main/java/com/seuprojeto/exception/CustomExceptionHandler.java
+
+```
+Java
+@ControllerAdvice
+public class CustomExceptionHandler {
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<String> handleMaxSizeException(MaxUploadSizeExceededException exc) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+            .body("Erro: O ficheiro excede o limite máximo de 10MB permitido.");
+    }
+}
+```
+🧪 Testes via Postman
+#### A. Upload de Documentos (Múltiplos)
+Método: POST
+
+URL: http://localhost:8082/documentos/upload
+
+Body: form-data
+
+Key: file (selecione o tipo File no Postman)
+
+Value: Selecione um ou mais ficheiros PDF/TXT.
+
+#### B. Perguntar à IA
+Método: POST
+
+URL: http://localhost:8082/chat/perguntar
+
+Headers: Content-Type: application/json
+
+Body (raw JSON):
+```
+JSON
+{
+  "pergunta": "Quais são as partes envolvidas no contrato anexado?"
+}
+```
+⚠️ Notas Técnicas (Manjaro Linux)
+CORS: O backend está configurado com @CrossOrigin(origins = "*") para permitir testes fluídos em ambientes de desenvolvimento e Expo Go.
+
+Firewall: Certifique-se de que a porta 8082 está aberta se testar a partir de outros dispositivos na mesma rede:
+```
+Bash
+sudo ufw allow 8082/tcp
+```
+Persistência: Por utilizar H2 em memória, os documentos são apagados sempre que o servidor é reiniciado.
+
+Projeto desenvolvido para otimização de fluxos de trabalho jurídicos.
