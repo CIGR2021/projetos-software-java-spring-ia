@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.ResponseEntity;
+
+import org.apache.tika.Tika;
+
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -18,6 +21,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class DocumentoController {
     private final DocumentoService service;
+    private final Tika tika = new Tika();
     
     @PostMapping("/upload")
     public ResponseEntity<String> upload(@RequestParam("file") MultipartFile[] files) {
@@ -25,6 +29,11 @@ public class DocumentoController {
         try {
             int contador = 0;
             for (MultipartFile file : files) {
+                // Validação de Segurança 1: Conteúdo real
+                if (!isFileSafe(file)) {
+                    return ResponseEntity.badRequest().body("Arquivo inválido: " + file.getOriginalFilename());
+                }
+                
                 // Aqui você chama a sua lógica de salvar/processar para CADA arquivo
                 service.salvar(file);
                 contador++;
@@ -32,6 +41,16 @@ public class DocumentoController {
             return ResponseEntity.ok("Sucesso! " + contador + " arquivos foram processados.");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erro ao processar: " + e.getMessage());
+        }
+    }
+    
+    private boolean isFileSafe(MultipartFile file) {
+        try {
+            // O Tika verifica os "magic bytes" do arquivo, não apenas a extensão
+            String detectedType = tika.detect(file.getInputStream());
+            return detectedType.equals("application/pdf") || detectedType.equals("text/plain");
+        } catch (Exception e) {
+            return false;
         }
     }
     
