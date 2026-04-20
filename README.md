@@ -39,6 +39,11 @@ spring.servlet.multipart.max-request-size=50MB
 # API Key Gemini
 gemini.api.key=SUA_CHAVE_AQUI
 ```
+
+## 🔐 Segurança
+A chave de API não deve ser exposta. Configure a variável de ambiente:
+`export GEMINI_API_KEY=sua_chave`
+
 ### 2. Executar a Aplicação
 No terminal do Manjaro, dentro da pasta do projeto:
 ```
