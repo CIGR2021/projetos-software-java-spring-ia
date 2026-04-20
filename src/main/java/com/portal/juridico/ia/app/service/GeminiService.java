@@ -7,6 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import org.springframework.beans.factory.annotation.Value;
+
+import jakarta.annotation.PostConstruct;
+
 import java.util.Map;
 
 /**
@@ -17,7 +21,8 @@ import java.util.Map;
 @Service
 public class GeminiService {
     // Coloque aqui a API KEY.
-    private static final String API_KEY = "AIzaSyDpkhj0svADSay6y7asGeYl4aJDhuDQar0";
+    @Value("${GEMINI_API_KEY:chave_nao_encontrada}")
+    private String API_KEY;
     private static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
     private final RestTemplate resTemplate = new RestTemplate();
     
@@ -64,6 +69,14 @@ public class GeminiService {
             return firstPart.get("text").toString();
         } catch (Exception e) {
             return "Erro ao processar a IA: " + e.getMessage();
+        }
+    }
+    @PostConstruct
+    public void validarChave() {
+        if (API_KEY.equals("chave_nao_encontrada")) {
+            System.err.println("ERRO CRÍTICO: A chave da API não foi carregada!");
+        } else {
+            System.out.println("Chave carregada com sucesso. Início: " + API_KEY.substring(0, 5));
         }
     }
 }
