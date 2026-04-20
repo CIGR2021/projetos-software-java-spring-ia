@@ -1,18 +1,23 @@
 # Portal Jurídico IA ⚖️🤖
 
-Sistema inteligente para análise de documentos jurídicos, utilizando **Java Spring Boot** no backend e **Google Gemini API** para processamento de linguagem natural.
+Sistema inteligente para análise de documentos jurídicos, utilizando **Java 17, Spring Boot 4.x** e **Google Gemini API**. O projeto foca em extração de alta precisão e segurança de dados sensíveis.
 
 ## 🚀 Funcionalidades
 
-- **Upload Múltiplo:** Envio de diversos documentos (PDF/Texto) simultaneamente via Postman ou App.
+- **Upload Múltiplo:** Envio simultâneo de diversos documentos para análise de contexto cruzado.
 - **Análise Contextual:** IA treinada para responder perguntas baseando-se estritamente nos documentos enviados.
 - **Gestão de Memória:** Integração com banco de dados H2 para armazenamento temporário de contexto.
 - **Tratamento de Erros:** Handler customizado para limites de upload (erro 413) e segurança de rede (CORS).
+- **Extração Avançada (PDFBox 3.x)**: Processamento otimizado de documentos PDF complexos com suporte a encoding UTF-8.
+- **Validação de MIME Type (Apache Tika)**: Segurança reforçada que valida o "DNA" do arquivo, impedindo o upload de arquivos maliciosos mascarados.
+- **Sanitização de Dados**: Tratamento automático de strings para evitar Prompt Injection e garantir a integridade das consultas à IA.
+- **Gestão Segura de Credenciais**: Integração com variáveis de ambiente e arquivos .env, eliminando chaves expostas no código.
 
 ## 🛠️ Tecnologias Utilizadas
 
 - **Backend:** Java 17+, Spring Boot 3.x
-- **IA:** Google Generative AI (Gemini SDK)
+- **IA:** Google Generative AI (Gemini SDK - Model: 1.5 Flash/Pro)
+- **Parser de Documentos**: Apache Tika & PDFBox 3.x
 - **Banco de Dados:** H2 Database (em memória)
 - **Ambiente de Desenvolvimento:** Manjaro Linux
 - **Ferramenta de Testes:** Postman
@@ -41,10 +46,12 @@ gemini.api.key=SUA_CHAVE_AQUI
 ```
 
 ## 🔐 Segurança
-A chave de API não deve ser exposta. Configure a variável de ambiente:
+### 2. Gestão de Variáveis de Ambiente
+Para manter a segurança, não chumbamos a chave no application.properties.
+Crie um arquivo .env na raiz do projeto ou configure no seu ambiente
 `export GEMINI_API_KEY=sua_chave`
 
-### 2. Executar a Aplicação
+### 3. Executar a Aplicação
 No terminal do Manjaro, dentro da pasta do projeto:
 ```
 Bash
@@ -52,19 +59,8 @@ mvn clean install
 mvn spring-boot:run
 ```
 📂 Estrutura de Tratamento de Erros
-A aplicação inclui um CustomExceptionHandler para gerir ficheiros acima do limite permitido. A classe deve estar localizada em:
-src/main/java/com/seuprojeto/exception/CustomExceptionHandler.java
+A aplicação inclui um CustomExceptionHandler para gerir ficheiros acima do limite permitido.
 
-```
-Java
-@ControllerAdvice
-public class CustomExceptionHandler {
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<String> handleMaxSizeException(MaxUploadSizeExceededException exc) {
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
-            .body("Erro: O ficheiro excede o limite máximo de 10MB permitido.");
-    }
-}
 ```
 🧪 Testes via Postman
 #### A. Upload de Documentos (Múltiplos)
@@ -100,6 +96,10 @@ Firewall: Certifique-se de que a porta 8082 está aberta se testar a partir de o
 Bash
 sudo ufw allow 8082/tcp
 ```
-Persistência: Por utilizar H2 em memória, os documentos são apagados sempre que o servidor é reiniciado.
+🔐 Segurança e Boas Práticas
+O projeto utiliza o padrão de injeção de dependência com fallback
+
+⚠️ Notas de Desenvolvimento (Ambiente Manjaro)
+Conflitos de Porta: Caso a porta 8082 esteja ocupada, utilize```fuser -k 8082/tcp```para liberar o processo.
 
 Projeto desenvolvido para otimização de fluxos de trabalho jurídicos.
