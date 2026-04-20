@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.stream.Collectors;
 import java.util.List;
+import java.io.InputStream;
 
 @Service
 @RequiredArgsConstructor
@@ -34,15 +35,18 @@ public class DocumentoService {
             // Leitura de arquivos de texto puro com encoding correto
             texto = new String(file.getBytes(), StandardCharsets.UTF_8);
         }
+        
+        // AQUI você inclui a sanitização que conversamos para segurança extra
+        String textoSanitizado = sanitizeText(texto);
 
         // Validação simples: não salvar se o documento estiver vazio
-        if (texto.trim().isEmpty()) {
+        if (textoSanitizado.trim().isEmpty()) {
             throw new Exception("O arquivo enviado está vazio ou não possui texto extraível.");
         }
 
         Documento doc = new Documento();
         doc.setNome(filename);
-        doc.setConteudo(texto);
+        doc.setConteudo(textoSanitizado); // Salva o texto limpo
 
         repository.save(doc);
     }
@@ -65,5 +69,27 @@ public class DocumentoService {
                          .stream()
                          .map(Documento::getNome)
                          .collect(Collectors.toList());
+    }
+    
+    public String extrairTexto(MultipartFile file) {
+        try (InputStream is = file.getInputStream();
+             PDDocument document = Loader.loadPDF(is.readAllBytes())) { // Para PDFBox 3.x
+
+            PDFTextStripper stripper = new PDFTextStripper();
+            return stripper.getText(document);
+
+        } catch (Exception e) {
+            return "Erro ao extrair texto do PDF: " + e.getMessage();
+        }
+    }
+    
+    private String sanitizeText(String input) {
+        if (input == null) return "";
+        // Remove tags HTML/XML e caracteres de controle (segurança básica)
+        String clean = input.replaceAll("<[^>]*>", "");
+        clean = clean.replaceAll("[\\x00-\\x1F\\x7F]", "");
+
+        // Limite de caracteres para não estourar o contexto da IA (ex: 20k chars)
+        return clean.length() > 20000 ? clean.substring(0, 20000) : clean;
     }
 }
